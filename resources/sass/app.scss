@@ -3,4 +3,8 @@
 
 @tailwind components;
 
+.button {
+    @apply .bg-blue-300 .text-white .py-2 .px-4 .shadow .rounded-lg;
+}
+
 @tailwind utilities;

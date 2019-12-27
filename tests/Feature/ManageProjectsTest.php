@@ -17,6 +17,7 @@ class ProjectsTest extends TestCase
     {
         $attributes = factory(Project::class)->raw();
 
+        $this->get('/projects/create')->assertRedirect('login');
         $this->post('/projects', $attributes)->assertRedirect('login');
     }
 
@@ -43,6 +44,7 @@ class ProjectsTest extends TestCase
             'description' => $this->faker->paragraph
         ];
 
+        $this->get('/projects/create')->assertStatus(200);
         $this->post('/projects', $attributes)->assertRedirect('/projects');
         $this->assertDatabaseHas('projects', $attributes);
         $this->get('/projects')->assertSee($attributes['title']);

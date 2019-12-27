@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title></title>
-</head>
-<body>
+@extends('layouts.app')
+
+@section('content')
     <h1>Create a Project</h1>
     <form method="POST" action="/projects">
         @csrf
@@ -20,6 +17,6 @@
             </div>
         </div>
         <button type="submit" class="button">Create a Project</button>
+        <a href="/projects">Cancel</a>
     </form>
-</body>
-</html>
+@endsection

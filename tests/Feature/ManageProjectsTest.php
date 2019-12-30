@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Project;
 use App\User;
+use Illuminate\Support\Str;
 
 class ProjectsTest extends TestCase
 {
@@ -38,7 +39,7 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_user_can_create_a_project()
     {
-        $this->actingAs(factory(User::class)->create());
+        $this->signIn();
         $attributes = [
             'title' => $this->faker->sentence,
             'description' => $this->faker->paragraph
@@ -53,18 +54,18 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_user_can_view_their_project()
     {
-        $this->actingAs(factory(User::class)->create());
+        $this->signIn();
         $project = factory(Project::class)->create(['owner_id' => auth()->id()]);
 
         $this->get($project->path())
             ->assertSee($project->title)
-            ->assertSee($project->description);
+            ->assertSee(Str::limit($project->description, 100));
     }
 
     /** @test */
     public function an_authenticated_user_cannot_view_projects_of_others()
     {
-        $this->actingAs(factory(User::class)->create());
+        $this->signIn();
         $project = factory(Project::class)->create();
 
         $this->get($project->path())->assertStatus(403);
@@ -73,7 +74,7 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_project_requires_a_title()
     {
-        $this->actingAs(factory(User::class)->create());
+        $this->signIn();
         $attributes = factory(Project::class)->raw(['title' => '']);
         
         $this->post('/projects', $attributes)->assertSessionHasErrors('title');
@@ -82,7 +83,7 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_project_requires_a_description()
     {
-        $this->actingAs(factory(User::class)->create());
+        $this->signIn();
         $attributes = factory(Project::class)->raw(['description' => '']);
 
         $this->post('/projects', $attributes)->assertSessionHasErrors('description');

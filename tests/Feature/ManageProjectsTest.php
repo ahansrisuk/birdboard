@@ -42,13 +42,38 @@ class ProjectsTest extends TestCase
         $this->signIn();
         $attributes = [
             'title' => $this->faker->sentence,
-            'description' => $this->faker->paragraph
+            'description' => $this->faker->sentence,
+            'notes' => 'General notes here.'
         ];
 
         $this->get('/projects/create')->assertStatus(200);
-        $this->post('/projects', $attributes)->assertRedirect('/projects/1');
+        $response = $this->post('/projects', $attributes);
+        $project = Project::where($attributes)->first();
+
+        $this->get('/projects/create')->assertStatus(200);
+        $response->assertRedirect($project->path());
         $this->assertDatabaseHas('projects', $attributes);
-        $this->get('/projects')->assertSee($attributes['title']);
+        $this->get($project->path())
+            ->assertSee($attributes['title'])
+            ->assertSee($attributes['description'])
+            ->assertSee($attributes['notes']);
+    }
+
+    /** @test */
+    public function a_user_can_update_a_project()
+    {
+
+        $this->signIn();
+        $project = factory(Project::class)->create(['owner_id' => auth()->id()]);
+        $attributes = [
+            'notes' => 'Updated notes'
+        ];
+
+        $this->patch($project->path(), $attributes)
+            ->assertRedirect($project->path());
+        $this->assertDatabaseHas('projects', $attributes);
+        $this->get($project->path())->assertSee($attributes['notes']);
+
     }
 
     /** @test */
@@ -69,6 +94,15 @@ class ProjectsTest extends TestCase
         $project = factory(Project::class)->create();
 
         $this->get($project->path())->assertStatus(403);
+    }
+
+    /** @test */
+    public function an_authenticated_user_cannot_update_projects_of_others()
+    {
+        $this->signIn();
+        $project = factory(Project::class)->create();
+
+        $this->patch($project->path(), ['notes' => 'updated notes'])->assertStatus(403);
     }
 
     /** @test */

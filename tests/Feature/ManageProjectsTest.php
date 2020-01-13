@@ -15,26 +15,15 @@ class ProjectsTest extends TestCase
     use WithFaker, RefreshDatabase;
 
     /** @test */
-    public function guests_cannot_create_projects()
+    public function guests_cannot_manage_projects()
     {
-        $attributes = factory(Project::class)->raw();
+        $project= factory(Project::class)->create();
 
         $this->get('/projects/create')->assertRedirect('login');
-        $this->post('/projects', $attributes)->assertRedirect('login');
-    }
-
-    /** @test */
-    public function guests_cannot_view_projects()
-    {
+        $this->post('/projects', $project->toArray())->assertRedirect('login');
         $this->get('/projects')->assertRedirect('login');
-    }
-
-    /** @test */
-    public function guests_cannot_view_a_single_project()
-    {
-        $project = factory(Project::class)->create();
-
         $this->get($project->path())->assertRedirect('login');
+        $this->get($project->path() . '/edit')->assertRedirect('login');
     }
 
     /** @test */
@@ -65,9 +54,12 @@ class ProjectsTest extends TestCase
     {
         $project = ProjectFactory::ownedBy($this->signIn())->create();
         $attributes = [
+            'title' => 'Changed title',
+            'description' => 'new description',
             'notes' => 'Updated notes'
         ];
 
+        $this->get($project->path() . '/edit')->assertStatus(200);
         $this->patch($project->path(), $attributes)
             ->assertRedirect($project->path());
         $this->assertDatabaseHas('projects', $attributes);
